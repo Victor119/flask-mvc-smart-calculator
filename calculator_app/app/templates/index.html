@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #f0f0f0; }
+        .window {
+            position: absolute;
+            left: {{ x }}px; top: {{ y }}px;
+            width: {{ w }}px; height: {{ h }}px;
+            border: 2px solid #333;
+            background-color: #ccc;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+            padding: 10px;
+        }
+        .display-container {
+            position: absolute; top: 50px; left: 100px;
+            display: flex; align-items: center;
+        }
+        .display-label { font-family: sans-serif; font-size: 14px; margin-right: 10px; }
+        .display-box {
+            width: 200px; height: 50px;
+            border: 1px solid #666; background-color: #fff;
+            font-family: monospace; font-size: 14px;
+            padding: 5px; box-sizing: border-box;
+        }
+        .return-button {
+            position: absolute;
+            left: {{ ret_x }}px; top: {{ ret_y }}px;
+            width: {{ ret_w }}px; height: {{ ret_h }}px;
+            font-size: 12px;
+        }
+        .radio-group {
+            position: absolute; top: 150px; left: 160px;
+            width: 200px; border: 1px solid #333;
+            background-color: #eee; padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="display-container">
+            <div class="display-label">calculator function</div>
+            <input class="display-box" type="text" value="{{ first_text }}" readonly>
+
+            <div class="display-label" style="margin-left: 20px;">n-th fibonacci number</div>
+            <input class="display-box" type="text" value="{{ second_text }}" readonly>
+
+            <div class="display-label" style="margin-left: 20px;">factorial of the number</div>
+            <input class="display-box" type="text" value="{{ third_text }}" readonly>
+        </div>
+
+        <form method="post">
+            <div class="radio-group">
+                {% set custom_labels = ["calculator function", "n-th fibonacci number", "factorial of the number"] %}
+                {% for i in range(radio_buttons | length) %}
+                <div class="radio-option">
+                    <input type="radio" id="{{ radio_buttons[i].id }}" name="radio_option" value="{{ i + 1 }}"
+                        {% if selected_choice == i + 1 %}checked{% endif %}>
+                    <label for="{{ radio_buttons[i].id }}">{{ custom_labels[i] }}</label>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div style="position: absolute; top: 130px; left: 400px;">
+                <label for="edit_box" style="font-family: sans-serif; font-size: 14px;">My Input</label><br>
+                <textarea id="edit_box" name="edit_box"
+                    style="width: 150px; height: 100px; font-family: monospace; font-size: 14px;"
+                >{{ current_input }}</textarea>
+            </div>
+
+            <button class="return-button" type="submit">&Return</button>
+        </form>
+    </div>
+</body>
+</html>
