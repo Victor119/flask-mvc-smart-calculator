@@ -1,0 +1,67 @@
+The application is built around the principles of REST (Representational State Transfer), a standard architectural style for designing APIs. In this architecture, the client (typically a web browser) makes requests, and the server (where the API resides) processes them and returns responses.
+
+While REST strictly advocates for a stateless design—meaning every request must contain all the information necessary for processing—our application utilizes a hybrid approach. Alongside RESTful endpoints, it purposefully maintains server-side state to handle essential features like session management, user authentication, and data caching.
+
+From the user's perspective, interaction happens through a unified User Interface (UI). This UI consists of several widget components designed to transmit the user's inputs directly to the application's Controller.
+
+The user selects one of three available radio-button options:
+
+    A calculator function
+
+    The n-th Fibonacci number
+
+    The factorial of a number
+
+After making a selection, the user enters the corresponding value into the associated text box.
+
+When the user submits the form by pressing the Return button, an HTTP POST request is sent to the root (/) route.
+
+The Flask index() function intercepts this request. Before processing the payload, it initializes a Model instance. If no session ID is provided, the Model generates a new one and checks the database for any pre-existing session data.
+
+Next, the index() function retrieves the selected radio button and the user's text input from the form. The selected radio button is passed to the Controller via the chControl() method. The Controller updates the Model, which in turn saves this selection to the current session and persists it in the database via the DatabaseManager.
+
+Once the option is saved, the index() function determines which specific operation needs to be performed. It then verifies if the current user has the proper permissions, evaluating their authentication status and role (e.g., regular user vs. administrator).
+
+If the user is authorized, the workflow proceeds to the inpControl() method within the Controller class. This method receives the text entered by the user (from the edit_box field) and sends it to the Model. The Model subsequently updates the database session with the user's input text.
+
+With the data safely stored, inpControl() delegates the request to the corresponding mathematical handler (calculator, Fibonacci, or factorial). Throughout this process, the system actively logs the execution steps and handles any unexpected errors.
+
+To optimize performance, the assigned handler first queries the Model's cache to check for a previously computed result:
+
+    Cache Hit: If a result exists, it is immediately retrieved and reused.
+
+    Cache Miss: If not, the operation is computed from scratch, and the new result is stored in the cache for future requests.
+
+Finally, the Model updates the specific View widget associated with the selected operation, rendering the final result visible on the web interface.
+
+
+API Routes Workflow (Programmatic Access)
+
+Beyond the traditional web UI, the application exposes a suite of JSON-based RESTful endpoints under the /api/ prefix, allowing programmatic access for third-party clients or decoupled frontends.
+
+The API workflow is structured as follows:
+
+1. Calculation Endpoints:
+The application provides specific routes for each mathematical operation: /api/calculator, /api/fibonacci, and /api/factorial. However, all three of these routes act as simple wrappers. They just take the incoming data and forward it to a single, central endpoint: /api/calculate.
+
+To perform the actual calculation, the api_calculate function sends the data to the Controller class. The Controller then simply calls its inpControl() method (reusing the same logic as the web UI) to compute the final result, which is then returned to the client as a JSON response.
+
+2. Authentication Endpoints:
+Clients can manage their sessions programmatically using /api/login and /api/logout. These endpoints interface directly with the AuthenticationManager to verify credentials and establish or terminate the user's role-based access.
+
+3. Monitoring and Utility Endpoints:
+The API also provides routes for system administration:
+
+    /api/history returns a paginated list of past API requests.
+
+    /api/analytics provides insights such as total requests and operation distribution.
+
+    /api/cache/stats and /api/cache/clear allow administrators to view memory usage and clear cached results.
+
+Data Persistence Layer
+
+Under the hood, this entire process—whether triggered via the UI or the API routes—is supported by a relational database managed by the DatabaseManager, consisting of two primary tables:
+
+    API Requests Table: Stores a detailed log of all API transactions (including operation type, inputs, results, IP addresses, and error messages) for monitoring and history.
+
+    User Sessions Table: Maintains user sessions across requests, enabling the stateful features of our application (like remembering the last choice and input) and tying them to specific session IDs.
